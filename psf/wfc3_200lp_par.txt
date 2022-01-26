@@ -1,0 +1,277 @@
+&BeginPar7.5
+wfc3_200lp  # Output PSF file rootname
+/Users/ajshajib/mybin/tinytim/wfc3_uvis2.tab  # Name of Zernike table file
+/Users/ajshajib/mybin/tinytim/wfc3_uvis2.pup  # Name of pupil table file
+00-00-0000 # Observation date (dd-mm-yyyy)
+WFC3_UVIS2  # Camera
+29  # Camera ID number
+f200lp  # Filter
+bpgs_53  # Spectrum file
+-1.000000  # Major axis jitter in mas (-1 = no jitter)
+-1.000000  # Minor axis jitter in mas
+0.000000  # Angle of jitter major axis in deg from +X axis
+1  # Number of positions
+2000 1000  # Position 1
+3.24  # PSF diameter in arcsecs
+1  # Skip wavelengths with low weights? (0=no)
+0.010000  # Min good weight limit coefficient
+50  # Number of wavelengths
+0.204210 0.000022 1280 # Wavelength 1 (microns), weight, grid size
+0.210910 0.000065 1280 # Wavelength 2 (microns), weight, grid size
+0.217840 0.000122 1280 # Wavelength 3 (microns), weight, grid size
+0.224990 0.000207 1280 # Wavelength 4 (microns), weight, grid size
+0.232370 0.000216 1280 # Wavelength 5 (microns), weight, grid size
+0.240000 0.000199 1280 # Wavelength 6 (microns), weight, grid size
+0.247880 0.000252 1280 # Wavelength 7 (microns), weight, grid size
+0.256020 0.000425 1024 # Wavelength 8 (microns), weight, grid size
+0.264430 0.000984 1024 # Wavelength 9 (microns), weight, grid size
+0.273110 0.000777 1024 # Wavelength 10 (microns), weight, grid size
+0.282070 0.001125 1024 # Wavelength 11 (microns), weight, grid size
+0.291340 0.002591 1024 # Wavelength 12 (microns), weight, grid size
+0.300900 0.002274 1024 # Wavelength 13 (microns), weight, grid size
+0.310780 0.002998 1024 # Wavelength 14 (microns), weight, grid size
+0.320980 0.003672 1024 # Wavelength 15 (microns), weight, grid size
+0.331520 0.004747 1024 # Wavelength 16 (microns), weight, grid size
+0.342410 0.004969 1024 # Wavelength 17 (microns), weight, grid size
+0.353650 0.005592 1024 # Wavelength 18 (microns), weight, grid size
+0.365260 0.006442 1024 # Wavelength 19 (microns), weight, grid size
+0.377250 0.007141 1024 # Wavelength 20 (microns), weight, grid size
+0.389640 0.007513 1024 # Wavelength 21 (microns), weight, grid size
+0.402430 0.015023 1024 # Wavelength 22 (microns), weight, grid size
+0.415640 0.015948 1024 # Wavelength 23 (microns), weight, grid size
+0.429290 0.016350 1024 # Wavelength 24 (microns), weight, grid size
+0.443380 0.023009 1024 # Wavelength 25 (microns), weight, grid size
+0.457940 0.027286 1024 # Wavelength 26 (microns), weight, grid size
+0.472970 0.030050 1024 # Wavelength 27 (microns), weight, grid size
+0.488500 0.030742 1024 # Wavelength 28 (microns), weight, grid size
+0.504540 0.032435 512 # Wavelength 29 (microns), weight, grid size
+0.521110 0.032105 512 # Wavelength 30 (microns), weight, grid size
+0.538220 0.036901 512 # Wavelength 31 (microns), weight, grid size
+0.555890 0.041786 512 # Wavelength 32 (microns), weight, grid size
+0.574140 0.045460 512 # Wavelength 33 (microns), weight, grid size
+0.592990 0.046975 512 # Wavelength 34 (microns), weight, grid size
+0.612460 0.048101 512 # Wavelength 35 (microns), weight, grid size
+0.632560 0.048220 512 # Wavelength 36 (microns), weight, grid size
+0.653330 0.049596 512 # Wavelength 37 (microns), weight, grid size
+0.674780 0.048518 512 # Wavelength 38 (microns), weight, grid size
+0.696940 0.048224 512 # Wavelength 39 (microns), weight, grid size
+0.719820 0.045450 512 # Wavelength 40 (microns), weight, grid size
+0.743450 0.041045 512 # Wavelength 41 (microns), weight, grid size
+0.767860 0.035268 512 # Wavelength 42 (microns), weight, grid size
+0.793070 0.033852 512 # Wavelength 43 (microns), weight, grid size
+0.819110 0.030026 512 # Wavelength 44 (microns), weight, grid size
+0.846000 0.027787 512 # Wavelength 45 (microns), weight, grid size
+0.873780 0.025554 512 # Wavelength 46 (microns), weight, grid size
+0.902460 0.023522 512 # Wavelength 47 (microns), weight, grid size
+0.932090 0.020102 512 # Wavelength 48 (microns), weight, grid size
+0.962690 0.015072 512 # Wavelength 49 (microns), weight, grid size
+0.994300 0.013258 512 # Wavelength 50 (microns), weight, grid size
+81  # Integrated PSF dimension (pixels)
+0.04  # Integrated PSF scaling (arcsec)
+1.000000  # Subsampling factor (1 = normal)
+2  #  Use mirror maps? (0 = no, otherwise yes)
+1  #  Adjust for WFC3 field aberrations? (0=no)
+1  #  Apply WFC3 pixel scattering (0=no)
+0  # Write out pupil map at 1st wavelength?
+0  # Write out wave map at 1st wavelength?
+0  # Write out crit psf at 1st wavelength & stop?
+# Pupil Table :  wfc3_uvis2.pup
+# Do not change the order of these entries!
+# Date : March 2008
+#  Initial implementation
+# Date : April 2010
+#  Swapped X/Y coeffs for astig and coma
+#  Added 3rd charge diffusion kernel
+# Date : March 2011
+#  Updated V2,V3 (pupil) coordinates for reference position and camera center
+#    using uab1537bi_idc.fits
+# WFC3 UVIS2 pupil information
+#----------------------------------------------------------------------------
+#
+# Optical Telescope Assembly pupil information
+#
+ 0.330  = OTA Secondary Mirror Radius
+ 0.022  = OTA Spider Width 
+#
+# Mirror pad positions and radii
+#
+  0.8921  0.0000 0.065 = OTA Pad 1 (V3, V2, Pad Radius)
+ -0.4615  0.7555 0.065 = OTA Pad 2
+ -0.4564 -0.7606 0.065 = OTA Pad 3
+#
+#
+#
+ 200 1000  = WFC3 CCD min, max detector wavelength (nm) 
+  135.0    = image axis rotation
+  0.0400   = nominal pixel size (arcsec)
+#
+#  WFC3 UVIS2 field dependent aberration coefficients (RMS waves at 632.8 nm)
+#
+# Focus
+#
+ -2.93133070e-02 9.77104130e-04 -7.01112707e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 8.48832287e-04 -3.82000537e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ -7.31339029e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+#
+# X astig
+# SWAPPED !!!
+#
+ -1.00575676e-02 2.53378515e-04 2.01974800e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ -1.29234209e-04 -4.82961364e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 1.73286690e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+#
+# Y astig
+#  SWAPPED !!!
+ 2.39527204e-02 3.81747698e-05 -2.58469234e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ -4.91836380e-04 -3.18336492e-07 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 2.48552100e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+#
+# X coma
+#  SWAPPED !!!
+ 1.00672428e-03 -3.97810335e-04 6.97828336e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ -3.53971714e-04 -6.05719636e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 6.57288427e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+#
+# Y coma
+# SWAPPED !!!
+ 6.28105522e-04 3.63570927e-04 -3.57989097e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ -3.46734931e-04 -4.54594879e-07 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 3.49171715e-06 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+ 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+#
+# Coefficients to transform detector X,Y to V2,V3
+#
+#
+# V2,V3 (pupil) coordinates of reference position
+#
+  27.5680 33.3090  =  in arcsec
+#
+# detector X,Y of reference position
+#
+   2048 1026  = pixels
+#
+# V2,V3 (pupil) coordinates of WFC camera center
+#
+  -1.4430 4.0118    =  in arcsec
+#
+# X,Y -> V2 transformation coefficients
+#
+ 9.571725E-5          3.975004E-2
+ -5.236332E-9         -1.226927E-7          1.083897E-7  
+ 1.039952E-13         1.137132E-12  -2.574723E-13         1.069042E-12 
+0.0 0.0 0.0 0.0 0.0
+#
+# X,Y -> V3 transformation coefficients
+#
+3.977870E-2          2.527169E-3
+ -1.188122E-7          1.051361E-7          1.107312E-8 
+ 1.084092E-12        -1.935975E-13         1.073789E-12         1.760281E-13
+0.0 0.0 0.0 0.0 0.0
+#
+# V2,V3 -> X transformation coefficients
+#
+ -6.054364E-2           2.516106E1 
+ 7.402417E-5          1.955531E-3         -1.850160E-3 
+ -2.219971E-8         -1.721714E-7  -4.151107E-7         -1.694490E-7   
+0.0 0.0 0.0 0.0 0.0
+#
+# V2,V3 -> Y transformation coefficients
+#
+ 2.514293E1          -1.598500E0  
+ 1.887446E-3         -2.035728E-3          5.524384E-5 
+ -1.530682E-7         -4.071684E-7         -1.511295E-7         -1.808186E-8
+0.0 0.0 0.0 0.0 0.0
+#
+# Charge diffusion kernels (CCD pixel resolution)
+#
+#  ********* Note - These are based on thermal vac analysis by George Hartig 
+#            (ISR WFC3 2008-40)
+#
+0.400  = Wavelength (microns) of kernel 1
+#
+# Kernel 1
+#
+0.017 0.097 0.017
+0.097 0.544 0.097
+0.017 0.097 0.017
+#
+0.600  = Wavelength (microns) of kernel 2
+#
+# Kernel 2
+#
+0.012 0.084 0.012
+0.084 0.616 0.084
+0.012 0.084 0.012
+#                                    
+0.800  = Wavelength (microns) of kernel 3
+#
+# Kernel 3
+#
+0.007 0.069 0.007
+0.069 0.696 0.069
+0.007 0.069 0.007
+#                 
+# Additional field dependent charge diffusion relation coefficients
+#
+#  ********* Note - These are based on first inflight-data and were provided by
+#            Sami-Matias Niemi on 2010-03-03
+#
+  2  = number of wavelengths at which coefficients are defined
+#
+#
+  0.250  = wavelength 1
+0.45816 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+#
+  0.810  = wavelength 2
+0.45816 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0
+# Test Zernike file for WFC3 UVIS2 Channel
+# March 2008  Initial implementation (no aberrations)
+# April 2010  Set Z4-Z8 terms to non-zero to activate coeffs in .pup file
+  547.     # Reference wavelength (nm)
+  22       # Last Zernike in file
+  0.       # Z1 = (Not used)
+  0.       # Z2 = X (V2) tilt
+  0.       # Z3 = Y (V3) tilt
+0.000000 # Z4 = Focus
+  1e-12    # Z5 = 0 degree astigmatism
+  1e-12    # Z6 = 45 degree astigmatism
+  1e-12    # Z7 = X (V2) coma
+  1e-12    # Z8 = Y (V3) coma
+  0.       # Z9 = X (V2) clover
+  0.       # Z10 = Y (V3) clover
+  0.       # Z11 = 3rd order spherical
+  0.       # Z12 = 0 degree Spherical astigmatism
+  0.       # Z13 = 45 degree Spherical astigmatism
+  0.       # Z14 = X (V2) Ashtray
+  0.       # Z15 = Y (V3) Ashtray
+  0.       # Z16
+  0.       # Z17
+  0.       # Z18
+  0.       # Z19
+  0.       # Z20
+  0.       # Z21
+  0.       # Z22 = 5th order spherical

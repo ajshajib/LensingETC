@@ -1,0 +1,21 @@
+# wfc3_f160w_hires.tt3 : optional parameter file for tiny3
+#
+# Note : you do not have to modify this file to produce an ACS or WFC3 PSF
+# unless you want to generate a simulated observation convolved
+# with a PSF and then mapped onto a distorted grid.
+###################################################################
+INPUT_FILENAME=no_file 
+PIXEL_SCALE=0.026667
+X_CENTER=500 
+Y_CENTER=500 
+OUTPUT_FILENAME=no_file 
+###################################################################
+# Required entries :
+#      INPUT_FILENAME
+#      PIXEL_SCALE
+#      X_CENTER (range is 0-1013)
+#      Y_CENTER (range is 0-1013)
+#      OUTPUT_FILENAME
+# Optional entries :
+#      PSF
+# Comment lines begin with '#'
