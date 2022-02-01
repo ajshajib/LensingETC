@@ -507,8 +507,8 @@ class Simulator(object):
                                      n_scenario][i] *
                                     self.observing_scenarios[n_scenario][
                                         'num_exposure'][i]),
-                'ra_at_xy_0': -self.num_pixels[i]/2 * self.pixel_scales[i],
-                'dec_at_xy_0': -self.num_pixels[i]/2 * self.pixel_scales[i],
+                'ra_at_xy_0': -(self.num_pixels[i] - 1)/2. * self.pixel_scales[i],
+                'dec_at_xy_0': -(self.num_pixels[i] - 1)/2. * self.pixel_scales[i],
                 'transform_pix2angle': np.array([[self.pixel_scales[i], 0],
                                                 [0, self.pixel_scales[i]]
                                                 ])
@@ -872,17 +872,20 @@ class Simulator(object):
                               # , source_marg=True, linear_prior=[1e5, 1e5, 1e5]
                               )
 
-        f, axes = plt.subplots(num_filters, 3,
+        fig, axes = plt.subplots(num_filters, 3,
                                figsize=(num_filters*8, 10),
                                sharex=False, sharey=False)
 
+        if num_filters == 1:
+            axes = [axes]
+
         for i in range(num_filters):
-            lens_plot.data_plot(ax=axes[i, 0], band_index=i,
+            lens_plot.data_plot(ax=axes[i][0], band_index=i,
                                 v_max=2, v_min=-4,
                                 text='Filter {}'.format(i+1))
-            lens_plot.model_plot(ax=axes[i, 1], band_index=i,
+            lens_plot.model_plot(ax=axes[i][1], band_index=i,
                                  v_max=2, v_min=-4)
-            lens_plot.normalized_residual_plot(ax=axes[i, 2], band_index=i,
+            lens_plot.normalized_residual_plot(ax=axes[i][2], band_index=i,
                                                v_max=5, v_min=-5, cmap='RdBu')
 
         return fig
