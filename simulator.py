@@ -19,6 +19,9 @@ from lenstronomy.SimulationAPI.sim_api import SimAPI
 from lenstronomy.Workflow.fitting_sequence import FittingSequence
 from lenstronomy.Plots.model_plot import ModelPlot
 from lenstronomy.LightModel.light_model import LightModel
+from lenstronomy.LensModel.lens_model import LensModel
+from lenstronomy.LensModel.lens_model_extensions import LensModelExtensions
+from lenstronomy.LensModel.Solver.lens_equation_solver import LensEquationSolver
 
 # plot settings
 import seaborn as sns
@@ -109,6 +112,10 @@ class Simulator(object):
         self._source_positions = []
         self._lens_ellipticities = []
         self._source_ellipticities = []
+        if self._with_quasar:
+            self._image_positions = []
+        else:
+            self._image_positions = None
 
         if source_galaxy_indices == []:
             source_galaxy_indices = np.random.randint(0,
@@ -136,12 +143,19 @@ class Simulator(object):
                  'dec_0': 0}
             ])
 
-            r = np.random.uniform(0.1, 0.4) * theta_E
+            r = np.random.uniform(0.05, 0.35) * theta_E
             phi = np.random.uniform(-np.pi, np.pi)
             self._source_positions.append([r * np.cos(phi), r * np.sin(phi)])
             self._source_ellipticities.append([
                 np.random.uniform(-0.3, 0.3), np.random.uniform(-0.3, 0.3)
             ])
+
+            if self._with_quasar:
+                self._image_positions.append(
+                    self._get_point_image_positions(
+                        self._kwargs_lenses[-1],
+                        self._source_positions[-1]
+                ))
 
         self._weighted_exposure_time_maps = \
             self._get_weighted_exposure_time_maps()
@@ -155,6 +169,19 @@ class Simulator(object):
 
         self._walker_ratio = 8
 
+    def _get_point_image_positions(self, kwargs_lens,
+                                   source_position):
+        lens_model = LensModel(self._kwargs_model['lens_model_list'])
+        lens_equation_solver = LensEquationSolver(lens_model)
+
+        x_image, y_image = lens_equation_solver.image_position_from_source(
+                    kwargs_lens=kwargs_lens, sourcePos_x=source_position[0],
+                    sourcePos_y=source_position[1], min_distance=0.01,
+                    search_window=5,
+                    precision_limit=10 ** (-10), num_iter_max=100)
+
+        return x_image, y_image
+
     def _get_weighted_exposure_time_maps(self):
         weighted_exposure_time_maps = []
 
@@ -165,13 +192,13 @@ class Simulator(object):
                 for i in range(self.num_filters):
                     simulate_cosmic_ray = False
                     if 'simulate_cosmic_ray' in self.observing_scenarios[n]:
-                        if self.observing_scenarios[n][
-                                'simulate_cosmic_ray'][i] is False:
+                        if not self.observing_scenarios[n][
+                                                'simulate_cosmic_ray'][i]:
                             simulate_cosmic_ray = False
                         else:
                             simulate_cosmic_ray = True
                             if self.observing_scenarios[n][
-                                    'simulate_cosmic_ray'][i] is True:
+                                    'simulate_cosmic_ray'][i]:
                                 cosmic_ray_count_rate = 2.4e-3
                             else:
                                 cosmic_ray_count_rate = \
@@ -190,7 +217,7 @@ class Simulator(object):
                         )
                     else:
                         weighted_exposure_time_maps_filters.append(
-                            np.ones_like((self.num_pixels[i], self.num_pixels[i])) *
+                            np.ones((self.num_pixels[i], self.num_pixels[i])) *
                             self.observing_scenarios[n]['exposure_time'][i])
 
                 weighted_exposure_time_maps_scenarios.append(
@@ -551,6 +578,11 @@ class Simulator(object):
             self._kwargs_light[n_lens][n_scenario][0][2][0]
         ] if self._with_quasar else []
 
+        if self._with_quasar:
+            num_image = len(self._image_positions[n_lens][0])
+            kwargs_ps_init[0]['ra_image'] = self._image_positions[n_lens][0]
+            kwargs_ps_init[0]['dec_image'] = self._image_positions[n_lens][1]
+
         # initial spread in parameter estimation
         kwargs_lens_sigma = [
             {'theta_E': 0.01, 'e1': 0.01, 'e2': 0.01, 'gamma': .02,
@@ -565,7 +597,9 @@ class Simulator(object):
              #'n_sersic': .05, 'e1': 0.05, 'e2': 0.05,
              'center_x': 0.05, 'center_y': 0.05} for _ in range(
                 self.num_filters)]
-        kwargs_ps_sigma = [{'center_x': 0.05, 'center_y': 0.05}] if self._with_quasar else []
+        kwargs_ps_sigma = [{'ra_image': [0.05]*num_image,
+                            'dec_image': [0.05]*num_image}] if \
+            self._with_quasar else []
 
         # hard bound lower limit in parameter space
         kwargs_lower_lens = [
@@ -581,8 +615,9 @@ class Simulator(object):
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5,
              'center_x': -10, 'center_y': -10} for _ in range(
                 self.num_filters)]
-        kwargs_lower_ps = [{'ra_image': -1.5,
-                            'dec_image': -1.5}] if self._with_quasar else []
+        kwargs_lower_ps = [{'ra_image': [-1.5]*num_image,
+                            'dec_image': [-1.5]*num_image}] if self._with_quasar \
+            else []
 
         # hard bound upper limit in parameter space
         kwargs_upper_lens = [
@@ -596,8 +631,9 @@ class Simulator(object):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 5., 'e1': 0.5, 'e2': 0.5,
              'center_x': 10, 'center_y': 10} for _ in range(self.num_filters)]
-        kwargs_upper_ps = [{'ra_image': 1.5, 'dec_image': 1.5}] if \
-            self._with_quasar else []
+        kwargs_upper_ps = [{'ra_image': [1.5]*num_image,
+                            'dec_image': [1.5]*num_image}] if \
+                                        self._with_quasar else []
 
         # keeping parameters fixed
         kwargs_lens_fixed = [{}, {'ra_0': 0, 'dec_0': 0}]
@@ -665,6 +701,11 @@ class Simulator(object):
             # 'num_point_source_list': None,
             # 'solver_type': 'None'
         }
+
+        if self._with_quasar:
+            kwargs_constraints['solver_type'] = 'PROFILE_SHEAR'
+            kwargs_constraints['num_point_source_list'] = [len(
+                                self._image_positions[n_lens][0])]
 
         return kwargs_constraints
 
@@ -803,6 +844,9 @@ class Simulator(object):
             self.num_filters)]
         kwargs_model['index_source_light_model_list'] = [[i] for i in range(
             self.num_filters)]
+
+        if self._with_quasar:
+            kwargs_model['point_source_model_list'] = ['LENSED_POSITION']
 
         return kwargs_model
 
