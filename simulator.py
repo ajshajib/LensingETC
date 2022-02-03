@@ -703,9 +703,10 @@ class Simulator(object):
         }
 
         if self._with_quasar:
-            kwargs_constraints['solver_type'] = 'PROFILE_SHEAR'
-            kwargs_constraints['num_point_source_list'] = [len(
-                                self._image_positions[n_lens][0])]
+            num_images = len(self._image_positions[n_lens][0])
+            kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
+                num_images == 4 else 'ELLIPSE'
+            kwargs_constraints['num_point_source_list'] = [num_images]
 
         return kwargs_constraints
 
