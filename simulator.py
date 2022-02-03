@@ -580,8 +580,12 @@ class Simulator(object):
 
         if self._with_quasar:
             num_image = len(self._image_positions[n_lens][0])
-            kwargs_ps_init[0]['ra_image'] = self._image_positions[n_lens][0]
-            kwargs_ps_init[0]['dec_image'] = self._image_positions[n_lens][1]
+            kwargs_ps_init[0]['ra_source'] = kwargs_source_init[0]['center_x']
+            kwargs_ps_init[0]['dec_source'] = kwargs_source_init[0]['center_y']
+            # kwargs_ps_init[0]['ra_image'] = self._image_positions[
+            # n_lens][0]
+            # kwargs_ps_init[0]['dec_image'] = self._image_positions[
+            # n_lens][1]
 
         # initial spread in parameter estimation
         kwargs_lens_sigma = [
@@ -597,8 +601,8 @@ class Simulator(object):
              #'n_sersic': .05, 'e1': 0.05, 'e2': 0.05,
              'center_x': 0.05, 'center_y': 0.05} for _ in range(
                 self.num_filters)]
-        kwargs_ps_sigma = [{'ra_image': [0.05]*num_image,
-                            'dec_image': [0.05]*num_image}] if \
+        kwargs_ps_sigma = [{'ra_source': 0.05,
+                            'dec_source': 0.05}] if \
             self._with_quasar else []
 
         # hard bound lower limit in parameter space
@@ -615,8 +619,8 @@ class Simulator(object):
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5,
              'center_x': -10, 'center_y': -10} for _ in range(
                 self.num_filters)]
-        kwargs_lower_ps = [{'ra_image': [-1.5]*num_image,
-                            'dec_image': [-1.5]*num_image}] if self._with_quasar \
+        kwargs_lower_ps = [{'ra_source': -1.5,
+                            'dec_source': -1.5}] if self._with_quasar \
             else []
 
         # hard bound upper limit in parameter space
@@ -631,8 +635,8 @@ class Simulator(object):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 5., 'e1': 0.5, 'e2': 0.5,
              'center_x': 10, 'center_y': 10} for _ in range(self.num_filters)]
-        kwargs_upper_ps = [{'ra_image': [1.5]*num_image,
-                            'dec_image': [1.5]*num_image}] if \
+        kwargs_upper_ps = [{'ra_source': 1.5,
+                            'dec_source': 1.5}] if \
                                         self._with_quasar else []
 
         # keeping parameters fixed
@@ -697,7 +701,7 @@ class Simulator(object):
                                                  ]] for i
                                          in range(1, self.num_filters)],
             'joint_source_with_point_source': [[0, 0]] if self._with_quasar
-            else [],
+                                                                    else [],
             # 'num_point_source_list': None,
             # 'solver_type': 'None'
         }
@@ -707,6 +711,9 @@ class Simulator(object):
             kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
                 num_images == 4 else 'ELLIPSE'
             kwargs_constraints['num_point_source_list'] = [num_images]
+            # kwargs_constraints['solver_type'] = 'PROFILE_SHEAR'
+            # kwargs_constraints['num_point_source_list'] = [len(
+            #                     self._image_positions[n_lens][0])]
 
         return kwargs_constraints
 
@@ -847,7 +854,7 @@ class Simulator(object):
             self.num_filters)]
 
         if self._with_quasar:
-            kwargs_model['point_source_model_list'] = ['LENSED_POSITION']
+            kwargs_model['point_source_model_list'] = ['SOURCE_POSITION']
 
         return kwargs_model
 
