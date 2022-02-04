@@ -87,7 +87,7 @@ class Simulator(object):
         self.num_pixels = self.filter_specifications['num_pixel']
         self.pixel_scales = self.filter_specifications['pixel_scale']
 
-        self.num_filters = len(self.pixel_scales)
+        self.num_filters = self.filter_specifications['num_filter']
         self.num_scenarios = len(self.observing_scenarios)
 
         self._kwargs_model = {
@@ -246,8 +246,9 @@ class Simulator(object):
                                  figsize=figsize if figsize else
                                  (max(nrows * 3, 10), max(ncols * 5, 6))
                                  )
-
-        if len(axes.shape) == 1:
+        if nrows == 1 and ncols == 1:
+            axes = [[axes]]
+        elif len(axes.shape) == 1:
             axes = [axes]
 
         if vmax is None:
@@ -289,7 +290,9 @@ class Simulator(object):
                                     (max(nrows*3, 10), max(ncols*5, 6))
                                  )
 
-        if len(axes.shape) == 1:
+        if nrows == 1 and ncols == 1:
+            axes = [[axes]]
+        elif len(axes.shape) == 1:
             axes = [axes]
 
         for j in range(self.num_lenses):
@@ -582,10 +585,8 @@ class Simulator(object):
             num_image = len(self._image_positions[n_lens][0])
             kwargs_ps_init[0]['ra_source'] = kwargs_source_init[0]['center_x']
             kwargs_ps_init[0]['dec_source'] = kwargs_source_init[0]['center_y']
-            # kwargs_ps_init[0]['ra_image'] = self._image_positions[
-            # n_lens][0]
-            # kwargs_ps_init[0]['dec_image'] = self._image_positions[
-            # n_lens][1]
+            # kwargs_ps_init[0]['ra_image'] = self._image_positions[n_lens][0]
+            # kwargs_ps_init[0]['dec_image'] = self._image_positions[n_lens][1]
 
         # initial spread in parameter estimation
         kwargs_lens_sigma = [
@@ -708,12 +709,9 @@ class Simulator(object):
 
         if self._with_quasar:
             num_images = len(self._image_positions[n_lens][0])
-            kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
-                num_images == 4 else 'ELLIPSE'
-            kwargs_constraints['num_point_source_list'] = [num_images]
-            # kwargs_constraints['solver_type'] = 'PROFILE_SHEAR'
-            # kwargs_constraints['num_point_source_list'] = [len(
-            #                     self._image_positions[n_lens][0])]
+            # kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
+            #     num_images == 4 else 'ELLIPSE'
+            # kwargs_constraints['num_point_source_list'] = [num_images]
 
         return kwargs_constraints
 
