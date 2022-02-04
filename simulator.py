@@ -78,6 +78,11 @@ class Simulator(object):
         self.simulation_psfs = psfs['simulation']
         self.modeling_psfs = psfs['modeling']
 
+        if 'psf_uncertainty_level' in psfs:
+            self._psf_uncertainty_level = psfs['psf_uncertainty_level']
+        else:
+            self._psf_uncertainty_level = 0.
+
         self.lens_magnitude_distributions = magnitude_distributions['lens']
         self.source_magnitude_distributions = magnitude_distributions['source']
         if self._with_quasar:
@@ -549,11 +554,17 @@ class Simulator(object):
     def _get_kwargs_psf(self, n_lens, n_scenario):
         kwargs_psf_list = []
         for i in range(self.num_filters):
+            if self._psf_uncertainty_level > 0.:
+                max_noise = np.max(self.modeling_psfs[i]) * self._psf_uncertainty_level
+                exposure_time = np.max(self.modeling_psfs[i]) / max_noise**2
+                # F*t = (N*t)^2
+                psf_uncertainty = np.sqrt(self.modeling_psfs[i] *
+                                          exposure_time) / exposure_time
             kwargs_psf_list.append({
                 'psf_type': "PIXEL",
                 'kernel_point_source': self.modeling_psfs[i],
                 'kernel_point_source_init': self.modeling_psfs[i],
-                'psf_error_map': None,
+                'psf_error_map': psf_uncertainty,
                 'point_source_supersampling_factor': self.filter_specifications[
                             'modeling_psf_supersampling_resolution'][i]
             })
@@ -602,9 +613,11 @@ class Simulator(object):
              #'n_sersic': .05, 'e1': 0.05, 'e2': 0.05,
              'center_x': 0.05, 'center_y': 0.05} for _ in range(
                 self.num_filters)]
-        kwargs_ps_sigma = [{'ra_source': 0.05,
-                            'dec_source': 0.05}] if \
-            self._with_quasar else []
+        kwargs_ps_sigma = [{#'ra_image': 5e-5*np.ones(num_image),
+                            #'dec_image': 5e-5*np.ones(num_image),
+                            'ra_source': 5e-5,
+                            'dec_source': 5e-5
+                            }] if self._with_quasar else []
 
         # hard bound lower limit in parameter space
         kwargs_lower_lens = [
@@ -620,9 +633,11 @@ class Simulator(object):
             {'R_sersic': 0.001, 'n_sersic': 0.5, 'e1': -0.5, 'e2': -0.5,
              'center_x': -10, 'center_y': -10} for _ in range(
                 self.num_filters)]
-        kwargs_lower_ps = [{'ra_source': -1.5,
-                            'dec_source': -1.5}] if self._with_quasar \
-            else []
+        kwargs_lower_ps = [{#'ra_image': -1.5*np.ones(num_image),
+                            #'dec_image': -1.5*np.ones(num_image),
+                            'ra_source': -1.5,
+                            'dec_source': -1.5
+                            }] if self._with_quasar else []
 
         # hard bound upper limit in parameter space
         kwargs_upper_lens = [
@@ -636,9 +651,11 @@ class Simulator(object):
         kwargs_upper_lens_light = [
             {'R_sersic': 10, 'n_sersic': 5., 'e1': 0.5, 'e2': 0.5,
              'center_x': 10, 'center_y': 10} for _ in range(self.num_filters)]
-        kwargs_upper_ps = [{'ra_source': 1.5,
-                            'dec_source': 1.5}] if \
-                                        self._with_quasar else []
+        kwargs_upper_ps = [{#'ra_image': 1.5*np.ones(num_image),
+                            #'dec_image': 1.5*np.ones(num_image)
+                            'ra_source': 1.5,
+                            'dec_source': 1.5
+                            }] if self._with_quasar else []
 
         # keeping parameters fixed
         kwargs_lens_fixed = [{}, {'ra_0': 0, 'dec_0': 0}]
@@ -667,15 +684,24 @@ class Simulator(object):
         return kwargs_params
 
     def _get_multi_band_list(self, n_lens, n_scenario):
-        kwargs_numerics = {'supersampling_factor': 2,
-                           'supersampling_convolution': False
-                           }
-
         kwargs_data_list = self._get_kwargs_data(n_lens, n_scenario)
         kwargs_psf_list = self._get_kwargs_psf(n_lens, n_scenario)
 
         multi_band_list = []
         for i in range(self.num_filters):
+            psf_supersampling_factor = self.filter_specifications[
+                                'simulation_psf_supersampling_resolution'][i]
+            kwargs_numerics = {'supersampling_factor': 3,
+                               'supersampling_convolution': True if
+                               psf_supersampling_factor > 1 else False,
+                               'supersampling_kernel_size': 5,
+                               'point_source_supersampling_factor':
+                                   psf_supersampling_factor,
+                               'compute_mode': 'adaptive',
+                               }
+
+
+
             image_band = [kwargs_data_list[i], kwargs_psf_list[i],
                           kwargs_numerics]
 
@@ -710,7 +736,7 @@ class Simulator(object):
         if self._with_quasar:
             num_images = len(self._image_positions[n_lens][0])
             # kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
-            #     num_images == 4 else 'ELLIPSE'
+            #     num_images == 4 else 'CENTER'
             # kwargs_constraints['num_point_source_list'] = [num_images]
 
         return kwargs_constraints
@@ -774,7 +800,7 @@ class Simulator(object):
         fitting_kwargs_list = [
             ['MCMC',
              {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 8,
-              'sigma_scale': 3, 'progress': True,
+              'sigma_scale': 1e-4, 'progress': True,
               'threadCount': num_threads}]
         ]
 
