@@ -81,7 +81,7 @@ class Simulator(object):
         if 'psf_uncertainty_level' in psfs:
             self._psf_uncertainty_level = psfs['psf_uncertainty_level']
         else:
-            self._psf_uncertainty_level = 0.
+            self._psf_uncertainty_level = 0.5
 
         self.lens_magnitude_distributions = magnitude_distributions['lens']
         self.source_magnitude_distributions = magnitude_distributions['source']
@@ -253,8 +253,10 @@ class Simulator(object):
                                  )
         if nrows == 1 and ncols == 1:
             axes = [[axes]]
-        elif len(axes.shape) == 1:
+        elif nrows == 1:
             axes = [axes]
+        elif ncols == 1:
+            axes = [[ax] for ax in axes]
 
         if vmax is None:
             vmax = [2] * self.num_filters
@@ -297,8 +299,10 @@ class Simulator(object):
 
         if nrows == 1 and ncols == 1:
             axes = [[axes]]
-        elif len(axes.shape) == 1:
+        elif nrows == 1:
             axes = [axes]
+        elif ncols == 1:
+            axes = [[ax] for ax in axes]
 
         for j in range(self.num_lenses):
             for n in range(self.num_scenarios):
@@ -346,7 +350,7 @@ class Simulator(object):
                         point_source_add=True if self._with_quasar else False
                         )
 
-                    simulated_image[simulated_image < 0 ] = 1e-10
+                    simulated_image[simulated_image < 0] = 1e-10
 
                     simulated_image += self.sim_apis[j][n][i].noise_for_model(
                        model=simulated_image)
@@ -560,6 +564,8 @@ class Simulator(object):
                 # F*t = (N*t)^2
                 psf_uncertainty = np.sqrt(self.modeling_psfs[i] *
                                           exposure_time) / exposure_time
+            else:
+                psf_uncertainty = None
             kwargs_psf_list.append({
                 'psf_type': "PIXEL",
                 'kernel_point_source': self.modeling_psfs[i],
@@ -747,8 +753,8 @@ class Simulator(object):
                                * np.array(self.observing_scenarios[n_scenario][
                                               'num_exposure'])
         bands_compute = []
-        for time in total_exposure_times:
-            bands_compute.append(True if time > 0 else False)
+        for i in range(self.num_filters):
+            bands_compute.append(True if total_exposure_times[i] > 0 else False)
 
         mask_list = []
 
