@@ -1060,7 +1060,7 @@ class Simulator(object):
 
         if n_cr < 1:
             n_cr = 0
-            
+
         for i in range(n_cr):
             x = np.random.randint(0, num_pix)
             y = np.random.randint(0, num_pix)
@@ -1094,20 +1094,18 @@ class Simulator(object):
                     break
 
                 threshold -= (0.05 * (pixel_scale/0.04)**4)
-                    
+
         return 1 - binary_dilation(1 - map)
 
-    def compare_model_parameter(self, parameter_name, run_id, num_lenses,
+    def get_parameter_posteriors(self, parameter_name, run_id, num_lenses,
                                 num_scenarios, save_directory='./temp/',
                                 clip_chain=-10,
                                 ):
 
         if parameter_name == 'gamma':
             param_index = 1
-            param_latex = r'$\gamma$'
         elif parameter_name == 'theta_E':
             param_index = 0
-            param_latex = r'$\theta_{\rm E}$'
         else:
             raise ValueError('Parameter {} not supported!'.format(
                                                             parameter_name))
@@ -1155,6 +1153,30 @@ class Simulator(object):
 
             parameter_posteriors.append(parameter_posterior_scenarios)
 
+        return np.array(parameter_posteriors), np.array(parameter_truths)
+
+    def plot_individual_posterior_comparison(self, parameter_name,
+                                                   run_id, num_lenses,
+                                                   num_scenarios,
+                                                   save_directory='./temp/',
+                                                   clip_chain=-10,):
+
+        if parameter_name == 'gamma':
+            param_latex = r'$\gamma$'
+        elif parameter_name == 'theta_E':
+            param_latex = r'$\theta_{\rm E}$'
+        else:
+            raise ValueError('Parameter {} not supported!'.format(
+                                                            parameter_name))
+
+        parameter_posteriors, parameter_truths = self.get_parameter_posteriors(
+                                                            parameter_name,
+                                                            run_id, num_lenses,
+                                                            num_scenarios,
+                                                            save_directory,
+                                                            clip_chain
+                                                        )
+
         fig, axes = plt.subplots(ncols=2, figsize=(20, 6))
 
         for i in range(num_lenses):
@@ -1189,4 +1211,62 @@ class Simulator(object):
         axes[0].legend()
         axes[1].legend()
 
-        return fig, (parameter_truths, parameter_posteriors)
+        return fig, (parameter_posteriors, parameter_truths)
+
+    def plot_scenario_posterior_comparison(self, parameter_name,
+                                           run_id, num_lenses,
+                                           num_scenarios,
+                                           save_directory='./temp/',
+                                           clip_chain=-10, ):
+
+        if parameter_name == 'gamma':
+            param_latex = r'$\gamma$'
+        elif parameter_name == 'theta_E':
+            param_latex = r'$\theta_{\rm E}$'
+        else:
+            raise ValueError('Parameter {} not supported!'.format(
+                parameter_name))
+
+        parameter_posteriors, parameter_truths = self.get_parameter_posteriors(
+            parameter_name,
+            run_id, num_lenses,
+            num_scenarios,
+            save_directory,
+            clip_chain
+        )
+
+        fig, axes = plt.subplots(ncols=2, figsize=(20, 6))
+
+        parameter_uncertainties = (parameter_posteriors[..., 2] -
+                                        parameter_posteriors[..., 0]) / 2
+        normalized_deltas = (parameter_posteriors[..., 1] -
+                                    parameter_truths[:, np.newaxis]) / \
+                            parameter_uncertainties
+        fractional_uncertainties = parameter_uncertainties \
+                                        / parameter_posteriors[..., 1] * 100
+
+        axes[0].bar(np.arange(1, num_scenarios+1),
+                     np.mean(fractional_uncertainties, axis=0),
+                     width=0.5,
+                     #marker='o',
+                     #label='scenario {}'.format(j + 1) if i == 0 else None,
+                     color=palette
+                     )
+
+        axes[1].bar(np.arange(1, num_scenarios+1),
+                    np.mean(normalized_deltas, axis=0),
+                    width=0.5,
+                    #label='scenario {}'.format(j + 1) if i == 0 else None,
+                    color=palette
+                    )
+
+        axes[0].set_ylabel(r'{} uncertainty (%)'.format(param_latex))
+        axes[1].set_ylabel(r'{} offset ($\sigma$)'.format(param_latex))
+
+        axes[0].set_xlabel('Scenario')
+        axes[1].set_xlabel('Scenario')
+
+        axes[0].legend()
+        axes[1].legend()
+
+        return fig, (parameter_posteriors, parameter_truths)
