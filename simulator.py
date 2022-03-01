@@ -806,7 +806,7 @@ class Simulator(object):
         fitting_kwargs_list = [
             ['MCMC',
              {'n_burn': 0, 'n_run': n_run, 'walkerRatio': 8,
-              'sigma_scale': 1e-4, 'progress': True,
+              'sigma_scale': 1e-2, 'progress': True,
               'threadCount': num_threads}]
         ]
 
@@ -889,8 +889,8 @@ class Simulator(object):
         return kwargs_model
 
     def fit_models(self, run_id='', num_threads=1, n_run=500,
-                   save_directory='./temp/'):
-        for j in range(self.num_lenses):
+                   save_directory='./temp/', start_lens=0):
+        for j in range(start_lens, self.num_lenses):
             for n in range(self.num_scenarios):
                 print('Running lens: {}/{}, scenario: {}/{}'.format(
                     j+1, self.num_lenses, n+1, self.num_scenarios
@@ -1155,7 +1155,7 @@ class Simulator(object):
 
         return np.array(parameter_posteriors), np.array(parameter_truths)
 
-    def plot_individual_posterior_comparison(self, parameter_name,
+    def plot_parameter_posterior_comparison(self, parameter_name,
                                                    run_id, num_lenses,
                                                    num_scenarios,
                                                    save_directory='./temp/',
@@ -1213,7 +1213,7 @@ class Simulator(object):
 
         return fig, (parameter_posteriors, parameter_truths)
 
-    def plot_scenario_posterior_comparison(self, parameter_name,
+    def plot_scenario_comparison(self, parameter_name,
                                            run_id, num_lenses,
                                            num_scenarios,
                                            save_directory='./temp/',
@@ -1235,7 +1235,8 @@ class Simulator(object):
             clip_chain
         )
 
-        fig, axes = plt.subplots(ncols=2, figsize=(20, 6))
+        fig, axes = plt.subplots(ncols=1, figsize=(10, 6))
+        axes = [axes]
 
         parameter_uncertainties = (parameter_posteriors[..., 2] -
                                         parameter_posteriors[..., 0]) / 2
@@ -1253,20 +1254,20 @@ class Simulator(object):
                      color=palette
                      )
 
-        axes[1].bar(np.arange(1, num_scenarios+1),
-                    np.mean(normalized_deltas, axis=0),
-                    width=0.5,
-                    #label='scenario {}'.format(j + 1) if i == 0 else None,
-                    color=palette
-                    )
+        # axes[1].bar(np.arange(1, num_scenarios+1),
+        #             np.mean(normalized_deltas, axis=0),
+        #             width=0.5,
+        #             #label='scenario {}'.format(j + 1) if i == 0 else None,
+        #             color=palette
+        #             )
 
         axes[0].set_ylabel(r'{} uncertainty (%)'.format(param_latex))
-        axes[1].set_ylabel(r'{} offset ($\sigma$)'.format(param_latex))
+        #axes[1].set_ylabel(r'{} offset ($\sigma$)'.format(param_latex))
 
-        axes[0].set_xlabel('Scenario')
-        axes[1].set_xlabel('Scenario')
+        axes[0].set_xlabel('Case')
+        #axes[1].set_xlabel('Case')
 
-        axes[0].legend()
-        axes[1].legend()
+        #axes[0].legend()
+        #axes[1].legend()
 
         return fig, (parameter_posteriors, parameter_truths)
