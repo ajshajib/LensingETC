@@ -15,6 +15,6 @@ for a full list of contributors to `lenstronomy`.
 If you have used `LensingETC` in planning an observing campaign, we request 
 you to cite the following papers in your publication:
 
-- Shajib et al., (2022)
-- [Birrer et al., (2021)](https://ui.adsabs.harvard.edu/abs/2021JOSS....6.3283B/abstract)
-- [Birrer et al., (2018)](https://ui.adsabs.harvard.edu/abs/2018PDU....22..189B/abstract)
+- Shajib et al. (2022)
+- [Birrer et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021JOSS....6.3283B/abstract)
+- [Birrer et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018PDU....22..189B/abstract)
