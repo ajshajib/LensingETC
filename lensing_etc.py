@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
 """
-
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,120 +60,188 @@ palette = sns.color_palette('muted', 8)
 palette.as_hex()
 
 
-class Simulator(object):
-
-    def __init__(self, lens_specifications, filter_specifications,
-                 observing_scenarios, psfs,
-                 magnitude_distributions, use_pemd=False,
-                 source_galaxy_indices=[]
+class LensingETC(object):
+    """
+    Contains all the methods to simulate and model mock lenses, and plot the
+    results.
+    """
+    def __init__(self, lens_specifications=None, filter_specifications=None,
+                 observing_scenarios=None, psfs=None,
+                 magnitude_distributions=None, use_pemd=False,
+                 source_galaxy_indices=[], source_galaxy_shapelet_coeffs=None
                  ):
-        self.num_lenses = lens_specifications['num_lenses']
-        self._with_quasar = lens_specifications['with_quasar']
+        """
+        Setup the `LensingETC` class for simulation if arguments are provided.
+        It is possible to create an instance without passing any argument to
+        plot and examine the outputs.
 
-        self.filter_specifications = filter_specifications
-        self.observing_scenarios = observing_scenarios
+        :param lens_specifications: description of the lens sample
+        :type lens_specifications: `dict`
+        :param filter_specifications: description of the filters
+        :type filter_specifications: `dict`
+        :param observing_scenarios: description of the observing scenarios
+        :type observing_scenarios: `list`
+        :param psfs: PSFs for simulation and modeling
+        :type psfs: `dict`
+        :param magnitude_distributions: sampling functions for the magnitudes
+        :type magnitude_distributions: `dict`
+        :param use_pemd: if `True`, use FASTELL code, requires installation
+        of fastell4py package
+        :type use_pemd: `bool`
+        :param source_galaxy_indices: (optional) list of indices can be
+        provided to
+        select specific galaxy morphologies as sources, this list can be
+        curated by inspecting the galaxy structures with the notebook
+        source_galaxies/Inspect source galaxy structure.ipynb. If
+        source_galaxy_indices=None, then source galaxies wll be randomly
+        selected. If not provided, random source galaxies will be used.
+        :type source_galaxy_indices: `list`
+        :param source_galaxy_shapelet_coeffs: (optional) array containing
+        shapelet coefficients for source galaxies. If not provided,
+        a pre-existing library of galaxies will be used.
+        :type source_galaxy_shapelet_coeffs: `numpy.array`
+        """
+        do_simulation = False
 
-        self.simulation_psfs = psfs['simulation']
-        self.modeling_psfs = psfs['modeling']
+        if np.any([a is not None for a in
+                    [lens_specifications, filter_specifications,
+                     observing_scenarios, magnitude_distributions]]
+                  ):
+            if np.any([a is None for a in
+                     [lens_specifications, filter_specifications,
+                      observing_scenarios, magnitude_distributions]]
+                   ):
+                raise ValueError("One/more from lens_specifications, "
+                                 "filter_specifications, "
+                                 "observing_scenarios, "
+                                 "magnitude_distributions is not provided!")
 
-        if 'psf_uncertainty_level' in psfs:
-            self._psf_uncertainty_level = psfs['psf_uncertainty_level']
-        else:
-            self._psf_uncertainty_level = 0.5
+            else:
+                do_simulation = True
 
-        self.lens_magnitude_distributions = magnitude_distributions['lens']
-        self.source_magnitude_distributions = magnitude_distributions['source']
-        if self._with_quasar:
-            self.quasar_magnitude_distributions = magnitude_distributions[
-                                                                    'quasar']
+        if do_simulation:
+            self.num_lenses = lens_specifications['num_lenses']
+            self._with_point_source = lens_specifications['with_point_source']
 
-        self.num_pixels = self.filter_specifications['num_pixel']
-        self.pixel_scales = self.filter_specifications['pixel_scale']
+            self.filter_specifications = filter_specifications
+            self.observing_scenarios = observing_scenarios
 
-        self.num_filters = self.filter_specifications['num_filter']
-        self.num_scenarios = len(self.observing_scenarios)
+            self.simulation_psfs = psfs['simulation']
+            self.modeling_psfs = psfs['modeling']
 
-        self._kwargs_model = {
-            'lens_model_list': ['PEMD' if use_pemd else 'EPL', 'SHEAR'],
-            'lens_light_model_list': ['SERSIC_ELLIPSE'],
-            'source_light_model_list': ['SHAPELETS'],
-            'point_source_model_list': ['SOURCE_POSITION'] if
-            self._with_quasar else []
-        }
-        self._kwargs_model_smooth_source = {
-            'lens_model_list': ['PEMD' if use_pemd else 'EPL', 'SHEAR'],
-            'lens_light_model_list': ['SERSIC_ELLIPSE'],
-            'source_light_model_list': ['SERSIC_ELLIPSE'],
-            'point_source_model_list': ['SOURCE_POSITION'] if
-            self._with_quasar else []
-        }
+            if 'psf_uncertainty_level' in psfs:
+                self._psf_uncertainty_level = psfs['psf_uncertainty_level']
+            else:
+                self._psf_uncertainty_level = 0.5
 
-        self._shapelet_coeffs = np.load(
-            'source_galaxy_shapelet_coefficients_nmax50.npz')['arr_0']
+            self.lens_magnitude_distributions = magnitude_distributions['lens']
+            self.source_magnitude_distributions = magnitude_distributions['source']
+            if self._with_point_source:
+                self.quasar_magnitude_distributions = magnitude_distributions[
+                                                                        'quasar']
 
-        self._kwargs_lenses = []
-        self._source_positions = []
-        self._lens_ellipticities = []
-        self._source_ellipticities = []
-        if self._with_quasar:
-            self._image_positions = []
-        else:
-            self._image_positions = None
+            self.num_pixels = self.filter_specifications['num_pixel']
+            self.pixel_scales = self.filter_specifications['pixel_scale']
 
-        if source_galaxy_indices == []:
-            source_galaxy_indices = np.random.randint(0,
-                                  len(self._shapelet_coeffs), self.num_lenses)
-        self._source_galaxy_shapelet_coeffs = self._shapelet_coeffs[
+            self.num_filters = self.filter_specifications['num_filter']
+            self.num_scenarios = len(self.observing_scenarios)
+
+            self._kwargs_model = {
+                'lens_model_list': ['PEMD' if use_pemd else 'EPL', 'SHEAR'],
+                'lens_light_model_list': ['SERSIC_ELLIPSE'],
+                'source_light_model_list': ['SHAPELETS'],
+                'point_source_model_list': ['SOURCE_POSITION'] if
+                self._with_point_source else []
+            }
+            self._kwargs_model_smooth_source = {
+                'lens_model_list': ['PEMD' if use_pemd else 'EPL', 'SHEAR'],
+                'lens_light_model_list': ['SERSIC_ELLIPSE'],
+                'source_light_model_list': ['SERSIC_ELLIPSE'],
+                'point_source_model_list': ['SOURCE_POSITION'] if
+                self._with_point_source else []
+            }
+
+            self._shapelet_coeffs = np.load(
+                'source_galaxy_shapelet_coefficients_nmax50.npz')['arr_0']
+
+            self._kwargs_lenses = []
+            self._source_positions = []
+            self._lens_ellipticities = []
+            self._source_ellipticities = []
+            if self._with_point_source:
+                self._image_positions = []
+            else:
+                self._image_positions = None
+
+            if not source_galaxy_indices:
+                source_galaxy_indices = np.random.randint(0,
+                                      len(self._shapelet_coeffs), self.num_lenses)
+
+            if source_galaxy_shapelet_coeffs is None:
+                self._source_galaxy_shapelet_coeffs = self._shapelet_coeffs[
                                                         source_galaxy_indices]
+            else:
+                self._source_galaxy_shapelet_coeffs = \
+                    source_galaxy_shapelet_coeffs
 
-        for j in range(self.num_lenses):
-            q = np.random.uniform(0.7, 0.9)
-            phi = np.random.uniform(-90, 90)
-            self._lens_ellipticities.append([q, phi])
+            for j in range(self.num_lenses):
+                q = np.random.uniform(0.7, 0.9)
+                phi = np.random.uniform(-90, 90)
+                self._lens_ellipticities.append([q, phi])
 
-            e1, e2 = phi_q2_ellipticity(phi*np.pi/180, q)
+                e1, e2 = phi_q2_ellipticity(phi*np.pi/180, q)
 
-            theta_E = np.random.uniform(1.2, 1.6)
-            self._kwargs_lenses.append([
-                {'theta_E': theta_E,
-                 'gamma': np.random.uniform(1.9, 2.1),
-                 'e1': e1,
-                 'e2': e2,
-                 'center_x': 0, 'center_y': 0},
-                {'gamma1': np.random.uniform(-0.08, 0.08),
-                 'gamma2': np.random.uniform(-0.08, 0.08),
-                 'ra_0': 0,
-                 'dec_0': 0}
-            ])
+                theta_E = np.random.uniform(1.2, 1.6)
+                self._kwargs_lenses.append([
+                    {'theta_E': theta_E,
+                     'gamma': np.random.uniform(1.9, 2.1),
+                     'e1': e1,
+                     'e2': e2,
+                     'center_x': 0, 'center_y': 0},
+                    {'gamma1': np.random.uniform(-0.08, 0.08),
+                     'gamma2': np.random.uniform(-0.08, 0.08),
+                     'ra_0': 0,
+                     'dec_0': 0}
+                ])
 
-            r = np.random.uniform(0.05, 0.35) * theta_E
-            phi = np.random.uniform(-np.pi, np.pi)
-            self._source_positions.append([r * np.cos(phi), r * np.sin(phi)])
-            self._source_ellipticities.append([
-                np.random.uniform(-0.3, 0.3), np.random.uniform(-0.3, 0.3)
-            ])
+                r = np.random.uniform(0.05, 0.35) * theta_E
+                phi = np.random.uniform(-np.pi, np.pi)
+                self._source_positions.append([r * np.cos(phi), r * np.sin(phi)])
+                self._source_ellipticities.append([
+                    np.random.uniform(-0.3, 0.3), np.random.uniform(-0.3, 0.3)
+                ])
 
-            if self._with_quasar:
-                self._image_positions.append(
-                    self._get_point_image_positions(
-                        self._kwargs_lenses[-1],
-                        self._source_positions[-1]
-                ))
+                if self._with_point_source:
+                    self._image_positions.append(
+                        self._get_point_image_positions(
+                            self._kwargs_lenses[-1],
+                            self._source_positions[-1]
+                    ))
 
-        self._weighted_exposure_time_maps = \
-            self._get_weighted_exposure_time_maps()
-        self.sim_apis = self._get_sim_apis(self._kwargs_model)
-        self.sim_apis_smooth_source = self._get_sim_apis(
-            self._kwargs_model_smooth_source)
-        self.image_sims = self._get_image_sims(self.sim_apis)
+            self._weighted_exposure_time_maps = \
+                self._get_weighted_exposure_time_maps()
+            self.sim_apis = self._get_sim_apis(self._kwargs_model)
+            self.sim_apis_smooth_source = self._get_sim_apis(
+                self._kwargs_model_smooth_source)
+            self.image_sims = self._get_image_sims(self.sim_apis)
 
-        self._kwargs_light = self._get_kwargs_light()
-        self.simulated_data = self._simulate_data()
+            self._kwargs_light = self._get_kwargs_light()
+            self.simulated_data = self._simulate_data()
 
         self._walker_ratio = 8
 
     def _get_point_image_positions(self, kwargs_lens,
                                    source_position):
+        """
+        Solve the lens equation to get the image position.
+
+        :param kwargs_lens: lens model parameters in lenstronomy convention
+        :type kwargs_lens:
+        :param source_position: x and y positions of source
+        :type source_position: `tuple`
+        :return:
+        :rtype:
+        """
         lens_model = LensModel(self._kwargs_model['lens_model_list'])
         lens_equation_solver = LensEquationSolver(lens_model)
 
@@ -188,6 +254,13 @@ class Simulator(object):
         return x_image, y_image
 
     def _get_weighted_exposure_time_maps(self):
+        """
+        Simulate cosmic ray hit map and return the weighted exposure time
+        map for all combinations of lenses and observing scenarios.
+
+        :return:
+        :rtype:
+        """
         weighted_exposure_time_maps = []
 
         for j in range(self.num_lenses):
@@ -234,6 +307,12 @@ class Simulator(object):
 
     @property
     def walker_ratio(self):
+        """
+        Get the emcee walker ratio.
+
+        :return:
+        :rtype:
+        """
         if hasattr(self, '_walker_ratio'):
             return self._walker_ratio
         else:
@@ -241,9 +320,29 @@ class Simulator(object):
             return self._walker_ratio
 
     def set_walker_ratio(self, ratio):
+        """
+        Set the emcee walker ratio.
+
+        :param ratio: walker ratio
+        :type ratio: `int`
+        :return:
+        :rtype:
+        """
         self._walker_ratio = ratio
 
     def plot_simualated_data(self, vmax=None, vmin=None, figsize=None):
+        """
+        Plot the montage of simulated lenses.
+
+        :param vmax: `vmax` for plotted lenses' log_10(flux).
+        :type vmax: `list`
+        :param vmin: `vmin` for plotted lenses' log_10(flux).
+        :type vmin: `list`
+        :param figsize: figure size
+        :type figsize: `tuple`
+        :return:
+        :rtype:
+        """
         nrows = self.num_lenses
         ncols = self.num_scenarios * self.num_filters
         fig, axes = plt.subplots(nrows=nrows,
@@ -289,6 +388,15 @@ class Simulator(object):
         return fig
 
     def plot_exposure_maps(self, figsize=None):
+        """
+        Plot the exposure map montage for all the combinations of lenses and
+        scenarios.
+
+        :param figsize: figure size
+        :type figsize: `tuple`
+        :return:
+        :rtype:
+        """
         nrows = self.num_lenses
         ncols = self.num_scenarios * self.num_filters
         fig, axes = plt.subplots(nrows=nrows,
@@ -332,6 +440,12 @@ class Simulator(object):
         return fig
 
     def _simulate_data(self):
+        """
+        Simulate data for all the combinations of lenses and scenarios.
+
+        :return:
+        :rtype:
+        """
         simulated_data_lenses = []
 
         for j in range(self.num_lenses):
@@ -347,7 +461,7 @@ class Simulator(object):
                         self._kwargs_lenses[j],
                         kwargs_source, kwargs_lens_light, kwargs_ps,
                         source_add=True, lens_light_add=True,
-                        point_source_add=True if self._with_quasar else False
+                        point_source_add=True if self._with_point_source else False
                         )
 
                     simulated_image[simulated_image < 0] = 1e-10
@@ -363,6 +477,15 @@ class Simulator(object):
         return simulated_data_lenses
 
     def _get_image_sims(self, sim_apis):
+        """
+        Call the `image_model_class()` method for all the `SimAPI` class
+        instances for each combination of lens and scenarios.
+
+        :param sim_apis: `SimAPI` class instances
+        :type sim_apis: `list`
+        :return:
+        :rtype:
+        """
         image_sims = []
         for j in range(self.num_lenses):
             image_sims_scenarios = []
@@ -386,6 +509,15 @@ class Simulator(object):
         return image_sims
 
     def _get_sim_apis(self, kwargs_model):
+        """
+        Create `SimAPI` class instances for each combination of lenses and
+        scenarios.
+
+        :param kwargs_model:
+        :type kwargs_model:
+        :return:
+        :rtype:
+        """
         sim_apis = []
 
         for j in range(self.num_lenses):
@@ -406,6 +538,23 @@ class Simulator(object):
     def _make_weighted_exposure_time_map(self, exposure_time, num_pixel,
                                          pixel_scale, num_exposure,
                                          cosmic_ray_count_rate=2.4e-3):
+        """
+        Make weighted exposure time map from simulated cosmic ray hit maps.
+
+        :param exposure_time: total exposure time
+        :type exposure_time: `float`
+        :param num_pixel: number of pixels along one side
+        :type num_pixel: `int`
+        :param pixel_scale: size of pixel in arcsecond unit
+        :type pixel_scale: `float`
+        :param num_exposure: number of exposures
+        :type num_exposure: `int`
+        :param cosmic_ray_count_rate: cosmic ray count rate in
+        event/s/arcsec^2 unit
+        :type cosmic_ray_count_rate: `float`
+        :return:
+        :rtype:
+        """
         exposure_time_map = np.ones((num_pixel, num_pixel)) * exposure_time
 
         cosmic_ray_weight_map = 0.
@@ -420,11 +569,23 @@ class Simulator(object):
 
         exposure_time_map *= cosmic_ray_weight_map / num_exposure
 
+        # replace 0's with very small number to avoid divide by 0
         exposure_time_map[exposure_time_map == 0.] = 1e-10
 
         return exposure_time_map
 
     def _get_filter_kwargs(self, n_lens, scenario_index):
+        """
+        Get dictionary containing filter specifications for each filter for
+        one scenario.
+
+        :param n_lens: index of lense
+        :type n_lens: `int`
+        :param scenario_index: index of observing scenario
+        :type scenario_index: `int`
+        :return:
+        :rtype:
+        """
         filter_kwargs = []
         for i in range(self.num_filters):
             exposure_time = self._weighted_exposure_time_maps[n_lens][
@@ -453,6 +614,12 @@ class Simulator(object):
         return filter_kwargs
 
     def _get_kwargs_light(self):
+        """
+        Get `kwargs_light` for all lenses for lenstronomy.
+
+        :return:
+        :rtype:
+        """
         kwargs_light_lenses = []
 
         for j in range(self.num_lenses):
@@ -460,7 +627,7 @@ class Simulator(object):
 
             lens_magnitudes = self.lens_magnitude_distributions()
             source_magnitudes = self.source_magnitude_distributions()
-            if self._with_quasar:
+            if self._with_point_source:
                 ps_magnitudes = self.quasar_magnitude_distributions()
 
             source_R_sersic = np.random.uniform(0.1, 0.2)
@@ -494,7 +661,7 @@ class Simulator(object):
                         'ra_source': self._source_positions[j][0],
                         'dec_source': self._source_positions[j][1],
                         'magnitude': ps_magnitudes[i]
-                    }] if self._with_quasar else []
+                    }] if self._with_point_source else []
 
                     kwargs_lens_light, kwargs_source_smooth, kwargs_ps = \
                         self.sim_apis_smooth_source[j][n][
@@ -534,6 +701,17 @@ class Simulator(object):
         return kwargs_light_lenses
 
     def _get_kwargs_data(self, n_lens, n_scenario):
+        """
+        Get `kwargs_data` for lenstronomy for one combination of lens and
+        scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :return:
+        :rtype:
+        """
         kwargs_data_list = []
 
         for i in range(self.num_filters):
@@ -555,7 +733,13 @@ class Simulator(object):
 
         return kwargs_data_list
 
-    def _get_kwargs_psf(self, n_lens, n_scenario):
+    def _get_kwargs_psf(self):
+        """
+        Get `kwargs_psf` for all filters for lenstronomy.
+
+        :return:
+        :rtype:
+        """
         kwargs_psf_list = []
         for i in range(self.num_filters):
             if self._psf_uncertainty_level > 0.:
@@ -578,6 +762,17 @@ class Simulator(object):
         return kwargs_psf_list
 
     def _get_kwargs_params(self, n_lens, n_scenario):
+        """
+        Get `kwargs_params` for lenstronomy for one combination of
+        lense and scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :return:
+        :rtype:
+        """
         # initial guess of non-linear parameters, starting from the truth
         # for fast convergence of the MCMC
         kwargs_lens_init = self._kwargs_lenses[n_lens]
@@ -596,9 +791,9 @@ class Simulator(object):
 
         kwargs_ps_init = [
             self._kwargs_light[n_lens][n_scenario][0][2][0]
-        ] if self._with_quasar else []
+        ] if self._with_point_source else []
 
-        if self._with_quasar:
+        if self._with_point_source:
             num_image = len(self._image_positions[n_lens][0])
             kwargs_ps_init[0]['ra_source'] = kwargs_source_init[0]['center_x']
             kwargs_ps_init[0]['dec_source'] = kwargs_source_init[0]['center_y']
@@ -623,7 +818,7 @@ class Simulator(object):
                             #'dec_image': 5e-5*np.ones(num_image),
                             'ra_source': 5e-5,
                             'dec_source': 5e-5
-                            }] if self._with_quasar else []
+                            }] if self._with_point_source else []
 
         # hard bound lower limit in parameter space
         kwargs_lower_lens = [
@@ -643,7 +838,7 @@ class Simulator(object):
                             #'dec_image': -1.5*np.ones(num_image),
                             'ra_source': -1.5,
                             'dec_source': -1.5
-                            }] if self._with_quasar else []
+                            }] if self._with_point_source else []
 
         # hard bound upper limit in parameter space
         kwargs_upper_lens = [
@@ -661,7 +856,7 @@ class Simulator(object):
                             #'dec_image': 1.5*np.ones(num_image)
                             'ra_source': 1.5,
                             'dec_source': 1.5
-                            }] if self._with_quasar else []
+                            }] if self._with_point_source else []
 
         # keeping parameters fixed
         kwargs_lens_fixed = [{}, {'ra_0': 0, 'dec_0': 0}]
@@ -669,7 +864,7 @@ class Simulator(object):
             'modeling_shapelet_n_max'][i]} for i in range(
                                         self.num_filters)]
         kwargs_lens_light_fixed = [{} for _ in range(self.num_filters)]
-        kwargs_ps_fixed = [{}] if self._with_quasar else []
+        kwargs_ps_fixed = [{}] if self._with_point_source else []
 
         lens_params = [kwargs_lens_init, kwargs_lens_sigma, kwargs_lens_fixed,
                        kwargs_lower_lens, kwargs_upper_lens]
@@ -690,6 +885,17 @@ class Simulator(object):
         return kwargs_params
 
     def _get_multi_band_list(self, n_lens, n_scenario):
+        """
+        Get `multi_band_list` for lenstronomy for one combination of
+        lense and scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :return:
+        :rtype:
+        """
         kwargs_data_list = self._get_kwargs_data(n_lens, n_scenario)
         kwargs_psf_list = self._get_kwargs_psf(n_lens, n_scenario)
 
@@ -716,11 +922,22 @@ class Simulator(object):
         return multi_band_list
 
     def _get_kwargs_constraints(self, n_lens, n_scenario):
+        """
+        Get `kwargs_constraints` for lenstronomy for one combination of
+        lense and scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :return:
+        :rtype:
+        """
         kwargs_constraints = {
             'joint_lens_with_light': [[0, 0, ['center_x',
                                               'center_y'
                                               ]]] if not
-            self._with_quasar else [],
+            self._with_point_source else [],
             'joint_lens_light_with_lens_light': [[0, i, ['center_x',
                                                          'center_y',
                                                          'e1', 'e2',
@@ -733,13 +950,13 @@ class Simulator(object):
                                                  'beta'
                                                  ]] for i
                                          in range(1, self.num_filters)],
-            'joint_source_with_point_source': [[0, 0]] if self._with_quasar
+            'joint_source_with_point_source': [[0, 0]] if self._with_point_source
                                                                     else [],
             # 'num_point_source_list': None,
             # 'solver_type': 'None'
         }
 
-        if self._with_quasar:
+        if self._with_point_source:
             num_images = len(self._image_positions[n_lens][0])
             # kwargs_constraints['solver_type'] = 'PROFILE_SHEAR' if \
             #     num_images == 4 else 'CENTER'
@@ -748,6 +965,17 @@ class Simulator(object):
         return kwargs_constraints
 
     def _get_kwargs_likelihood(self, n_lens, n_scenario):
+        """
+        Get `kwargs_likelihood` for lenstronomy for one combination of
+        lense and scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :return:
+        :rtype:
+        """
         total_exposure_times = np.array(self.observing_scenarios[n_scenario][
                                             'exposure_time']) \
                                * np.array(self.observing_scenarios[n_scenario][
@@ -788,6 +1016,21 @@ class Simulator(object):
         return kwargs_likelihood
 
     def _fit_one_model(self, n_lens, n_scenario, num_threads=1, n_run=500):
+        """
+        Run MCMC chain for one combination of lens and scenario.
+
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :param num_threads: number of threads for multiprocessing,
+        if 1 multiprocessing will not be used.
+        :type num_threads: `int`
+        :param n_run: number of MCMC steps
+        :type n_run: `int`
+        :return:
+        :rtype:
+        """
         multi_band_list = self._get_multi_band_list(n_lens, n_scenario)
 
         kwargs_data_joint = {'multi_band_list': multi_band_list,
@@ -819,7 +1062,26 @@ class Simulator(object):
 
     def _extend_chain(self, n_lens, n_scenario, run_id, num_threads=1,
                       n_run=500, save_directory='./temp/'):
+        """
+        Extend MCMC chain for one combination of lens and scenario.
 
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :param run_id: run ID of the previous run to be exteded
+        :type run_id: `str`
+        :param num_threads: number of threads for multiprocessing,
+        if 1 multiprocessing will not be used
+        :type num_threads: `int`
+        :param n_run: number of new MCMC steps
+        :type n_run: `int`
+        :param save_directory: save directory, must be same with the
+        previous run
+        :type save_directory: `str`
+        :return:
+        :rtype:
+        """
         save_file = save_directory + '{}_lens_{}_scenario_{' \
                                      '}.pickle'.format(run_id, n_lens,
                                                         n_scenario)
@@ -871,6 +1133,12 @@ class Simulator(object):
 
 
     def _get_kwargs_model(self):
+        """
+        Get `kwargs_model` for lenstronomy.
+
+        :return:
+        :rtype:
+        """
         kwargs_model = copy.deepcopy(self._kwargs_model)
         kwargs_model['lens_light_model_list'] = [self._kwargs_model[
                                     'lens_light_model_list'][0] for _ in range(
@@ -883,13 +1151,31 @@ class Simulator(object):
         kwargs_model['index_source_light_model_list'] = [[i] for i in range(
             self.num_filters)]
 
-        if self._with_quasar:
+        if self._with_point_source:
             kwargs_model['point_source_model_list'] = ['SOURCE_POSITION']
 
         return kwargs_model
 
     def fit_models(self, run_id='', num_threads=1, n_run=500,
                    save_directory='./temp/', start_lens=0):
+        """
+        Run MCMC chains for all combinations of lenses and scenarios.
+
+        :param run_id: run ID to differentiate between multiple runs
+        :type run_id: `str`
+        :param num_threads: number of multiprocessing threads,
+        if 1 multiprocessing will not be used
+        :type num_threads: `int`
+        :param n_run: number of MCMC steps
+        :type n_run: `int`
+        :param save_directory: directory to save MCMC outputs
+        :type save_directory: `str`
+        :param start_lens: lens index to start MCMC runs from, to resume a
+        stopped run
+        :type start_lens: `int`
+        :return:
+        :rtype:
+        """
         for j in range(start_lens, self.num_lenses):
             for n in range(self.num_scenarios):
                 print('Running lens: {}/{}, scenario: {}/{}'.format(
@@ -909,8 +1195,33 @@ class Simulator(object):
 
     def extend_chains(self, num_lenses, num_scenarios,
                       run_id='', extend_id='', num_threads=1, n_run=500,
-                      save_directory='./temp/'):
-        for j in range(num_lenses):
+                      save_directory='./temp/', start_lens=0):
+        """
+        Extend chains for all combinations of lenses and scenarios.
+
+        :param num_lenses: total number of lenses in the setup
+        :type num_lenses: `int`
+        :param num_scenarios: total number of scenarios in the setup
+        :type num_scenarios: `int`
+        :param run_id: run ID to differentiate between different runs
+        :type run_id: `str`
+        :param extend_id: extension ID
+        :type extend_id: `str`
+        :param num_threads: number of multiprocessing threads,
+        if 1 multiprocessing will not be used
+        :type num_threads: `int`
+        :param n_run: number of MCMC steps
+        :type n_run: `int`
+        :param save_directory: directory to save outputs, must be same with
+        the save directory of the previous run to be extended
+        :type save_directory: `str`
+        :param start_lens: index of lens to start from, to resume a
+        prevously stopped call to this method
+        :type start_lens: `int`
+        :return:
+        :rtype:
+        """
+        for j in range(start_lens, num_lenses):
             for n in range(num_scenarios):
                 print('Running lens: {}/{}, scenario: {}/{}'.format(
                     j+1, self.num_lenses, n+1, self.num_scenarios
@@ -932,6 +1243,23 @@ class Simulator(object):
     @classmethod
     def plot_lens_models(self, run_id, num_lens, num_scenario, num_filters=1,
                    save_directory='./temp/'):
+        """
+        Plot the lens model of one combination of lens and scenario after
+        running the MCMC chain.
+
+        :param run_id: run ID
+        :type run_id: `str`
+        :param num_lens: index of lens
+        :type num_lens: `int`
+        :param num_scenario: index of scenario
+        :type num_scenario: `int`
+        :param num_filters: number of filters
+        :type num_filters: `int`
+        :param save_directory: directory of saved output files
+        :type save_directory: `str`
+        :return:
+        :rtype:
+        """
         save_file = save_directory + '{}_lens_{}_scenario_{' \
                                      '}.pickle'.format(run_id, num_lens,
                                                        num_scenario)
@@ -974,6 +1302,20 @@ class Simulator(object):
 
     def plot_mcmc_trace(self, run_id, n_lens, n_scenario,
                         save_directory='./temp/'):
+        """
+        Plot MCMC trace for one combination of lens and scenario.
+
+        :param run_id: run ID
+        :type run_id: `str`
+        :param n_lens: index of lens
+        :type n_lens: `int`
+        :param n_scenario: index of scenario
+        :type n_scenario: `int`
+        :param save_directory: directory that has the saved MCMC output
+        :type save_directory: `str`
+        :return:
+        :rtype:
+        """
         save_file = save_directory + '{}_lens_{}_scenario_{' \
                                      '}.pickle'.format(run_id, n_lens,
                                                        n_scenario)
@@ -1047,6 +1389,18 @@ class Simulator(object):
 
     @staticmethod
     def _create_cr_hitmap(num_pix, pixel_scale, cosmic_ray_count):
+        """
+        Simulate a cosmic ray hit map.
+
+        :param num_pix: number of pixels
+        :type num_pix: `int`
+        :param pixel_scale: pixel size
+        :type pixel_scale: `float`
+        :param cosmic_ray_count: cosmic ray count
+        :type cosmic_ray_count: `int`
+        :return:
+        :rtype:
+        """
         map = np.ones((num_pix, num_pix))
         image_size = num_pix * pixel_scale
 
@@ -1101,7 +1455,26 @@ class Simulator(object):
                                 num_scenarios, save_directory='./temp/',
                                 clip_chain=-10,
                                 ):
+        """
+        Get posteriors (median and uncertainties) and truth values for lens
+        model parameters.
 
+        :param parameter_name: name of parameter, only `gamma` and `theta_E`
+        supported
+        :type parameter_name: `str`
+        :param run_id: run ID
+        :type run_id: `int`
+        :param num_lenses: number of lenses
+        :type num_lenses: `int`
+        :param num_scenarios: number of scenarios
+        :type num_scenarios: `int`
+        :param save_directory: directory of saved outputs
+        :type save_directory: `int`
+        :param clip_chain: MCMC step number to throw away from the beginning
+        :type clip_chain: `int`
+        :return:
+        :rtype:
+        """
         if parameter_name == 'gamma':
             param_index = 1
         elif parameter_name == 'theta_E':
@@ -1160,7 +1533,26 @@ class Simulator(object):
                                                    num_scenarios,
                                                    save_directory='./temp/',
                                                    clip_chain=-10,):
+        """
+        Plot all lens posteriors between the scenarios for one lens model
+        parameter.
 
+        :param parameter_name: name of parameter, only `gamma` and `theta_E`
+        supported
+        :type parameter_name: `str`
+        :param run_id: run ID
+        :type run_id: `int`
+        :param num_lenses: number of lenses
+        :type num_lenses: `int`
+        :param num_scenarios: number of scenarios
+        :type num_scenarios: `int`
+        :param save_directory: directory of saved outputs
+        :type save_directory: `int`
+        :param clip_chain: MCMC step number to throw away from the beginning
+        :type clip_chain: `int`
+        :return:
+        :rtype:
+        """
         if parameter_name == 'gamma':
             param_latex = r'$\gamma$'
         elif parameter_name == 'theta_E':
@@ -1214,11 +1606,30 @@ class Simulator(object):
         return fig, (parameter_posteriors, parameter_truths)
 
     def plot_scenario_comparison(self, parameter_name,
-                                           run_id, num_lenses,
-                                           num_scenarios,
-                                           save_directory='./temp/',
-                                           clip_chain=-10, ):
+                                       run_id, num_lenses,
+                                       num_scenarios,
+                                       save_directory='./temp/',
+                                       clip_chain=-10, ):
+        """
+        Compare the parameter posterior between the scenarios. All the
+        lenses within a scenario will be averaged over.
 
+        :param parameter_name: name of parameter, only `gamma` and `theta_E`
+        supported
+        :type parameter_name: `str`
+        :param run_id: run ID
+        :type run_id: `int`
+        :param num_lenses: number of lenses
+        :type num_lenses: `int`
+        :param num_scenarios: number of scenarios
+        :type num_scenarios: `int`
+        :param save_directory: directory of saved outputs
+        :type save_directory: `int`
+        :param clip_chain: MCMC step number to throw away from the beginning
+        :type clip_chain: `int`
+        :return:
+        :rtype:
+        """
         if parameter_name == 'gamma':
             param_latex = r'$\gamma$'
         elif parameter_name == 'theta_E':
@@ -1251,7 +1662,7 @@ class Simulator(object):
                      width=0.5,
                      #marker='o',
                      #label='scenario {}'.format(j + 1) if i == 0 else None,
-                     color=palette
+                     color=palette[0]
                      )
 
         # axes[1].bar(np.arange(1, num_scenarios+1),
