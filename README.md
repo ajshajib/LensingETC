@@ -10,6 +10,22 @@ a lens modelling software program affiliated
 with Astropy. See [here](https://github.com/sibirrer/lenstronomy/blob/main/AUTHORS.rst) 
 for a full list of contributors to `lenstronomy`.
 
+
+# Installation
+
+This package does not need an installation, as it is intended to be used 
+through a Jupyter notebook that is placed at the same directory of the file 
+`simulator.py`. However, `lenstronomy` needs to be installed, which can be 
+done with:
+
+```
+pip install lenstronomy
+```
+
+You can also check the 
+`lenstronomy`([GitHub repo](https://github.com/sibirrer/lenstronomy)) page if you
+want to install a bleeding-edge version.
+
 # Acknowledgement
 
 If you have used `LensingETC` in planning an observing campaign, we request 
