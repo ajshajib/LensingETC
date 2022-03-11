@@ -29,7 +29,7 @@ want to install a bleeding-edge version.
 # Acknowledgement
 
 If you have used `LensingETC` in planning an observing campaign, we request 
-you to cite the following papers in your publication:
+you to cite the following papers in your publication that uses data from the observing campaign:
 
 - Shajib et al. (2022)
 - [Birrer et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021JOSS....6.3283B/abstract)
