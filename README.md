@@ -15,7 +15,7 @@ for a full list of contributors to `lenstronomy`.
 
 This package does not need an installation, as it is intended to be used 
 through a Jupyter notebook that is placed at the same directory of the file 
-`simulator.py`. However, `lenstronomy` needs to be installed, which can be 
+`lensing_etc.py`. However, `lenstronomy` needs to be installed, which can be 
 done with:
 
 ```
