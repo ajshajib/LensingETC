@@ -897,7 +897,7 @@ class LensingETC(object):
         :rtype:
         """
         kwargs_data_list = self._get_kwargs_data(n_lens, n_scenario)
-        kwargs_psf_list = self._get_kwargs_psf(n_lens, n_scenario)
+        kwargs_psf_list = self._get_kwargs_psf()
 
         multi_band_list = []
         for i in range(self.num_filters):
