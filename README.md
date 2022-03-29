@@ -15,7 +15,7 @@ for a full list of contributors to `lenstronomy`.
 
 This package does not need an installation, as it is intended to be used 
 through a Jupyter notebook that is placed at the same directory of the file 
-`simulator.py`. However, `lenstronomy` needs to be installed, which can be 
+`lensing_etc.py`. However, `lenstronomy` needs to be installed, which can be 
 done with:
 
 ```
@@ -29,8 +29,8 @@ want to install a bleeding-edge version.
 # Acknowledgement
 
 If you have used `LensingETC` in planning an observing campaign, we request 
-you to cite the following papers in your publication:
+you to cite the following papers in your publication that uses data from the observing campaign:
 
-- Shajib et al. (2022)
+- [Shajib et al. (2022)](https://arxiv.org/abs/2203.05170)
 - [Birrer et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021JOSS....6.3283B/abstract)
 - [Birrer et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018PDU....22..189B/abstract)
