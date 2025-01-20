@@ -26,7 +26,7 @@ You can also check the
 `lenstronomy`([GitHub repo](https://github.com/sibirrer/lenstronomy)) page if you
 want to install a bleeding-edge version.
 
-# Acknowledgement
+# Citation
 
 If you have used `LensingETC` in planning an observing campaign, we request 
 you to cite the following paper in your publication that uses data from the observing campaign:
